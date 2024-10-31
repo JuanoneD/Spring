@@ -1,8 +1,9 @@
 package com.example.demo.dto;
 
 public record UserInfo(
-    String name,
-    String password
+    String username,
+    String password,
+    String email
 ) {
     
 }
