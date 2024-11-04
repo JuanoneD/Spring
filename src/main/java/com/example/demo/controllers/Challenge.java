@@ -5,12 +5,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import com.example.demo.dto.ChangePass;
 import com.example.demo.dto.CitiesDto;
 import com.example.demo.dto.Collazt;
 import com.example.demo.dto.Cu;
@@ -20,6 +22,7 @@ import com.example.demo.dto.UserInfo;
 import com.example.demo.model.Cities;
 import com.example.demo.repositories.CitiesRepo;
 import com.example.demo.services.CitiesService;
+import com.example.demo.services.LoginService;
 
 import java.util.*;
 
@@ -32,8 +35,13 @@ public class Challenge {
 
     @Autowired
     CitiesRepo cityRepo;
+
     @Autowired
     CitiesService cityServ;
+    @Autowired
+    LoginService loginServ;
+
+
 
     @GetMapping("/reverse/{word}")
     public ResponseEntity<Reverser> chanllege1(@PathVariable String word){
@@ -118,6 +126,20 @@ public class Challenge {
     }
     @PostMapping("/create")
     public ResponseEntity<String> Challenge6(@RequestBody UserInfo data){
-        
+        if(!loginServ.checkEmail(data.email()))
+            return new ResponseEntity<>("Email Invalido!!!",HttpStatus.OK);
+        if(!loginServ.checkPassword(data.password()))
+            return new ResponseEntity<>("Senha Invalida!!!",HttpStatus.OK);
+        if(!loginServ.checkUser(data.username()))
+            return new ResponseEntity<>("Username Invalido!!!",HttpStatus.OK);
+
+        if(!loginServ.createAccount(data.username(), data.email(), data.password()))
+            return new ResponseEntity<>("Erro na Criação de conta!!!",HttpStatus.OK);
+
+        return new ResponseEntity<>("Conta Criada com secesso!!!",HttpStatus.OK);
+    }
+    @PatchMapping("/changepassword")
+    public ResponseEntity<String>Challenge7(@RequestBody ChangePass data){
+        loginServ.changePassword(loginServ.login(data.username(), data.password()), data.newPassword(), data.repeatPassword());
     }
 }

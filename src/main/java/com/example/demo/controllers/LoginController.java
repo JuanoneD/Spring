@@ -19,7 +19,7 @@ public class LoginController {
     
     @PostMapping()
     public ResponseEntity<String> login(@RequestBody UserInfo data){
-        if(service.login(data.username(), data.password()) == 1){
+        if(service.login(data.username(), data.password()) != null){
             return ResponseEntity.ok("Sucesso!");
         }
         return ResponseEntity
