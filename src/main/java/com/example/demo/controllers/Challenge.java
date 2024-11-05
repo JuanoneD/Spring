@@ -19,10 +19,13 @@ import com.example.demo.dto.Cu;
 import com.example.demo.dto.Exp;
 import com.example.demo.dto.Reverser;
 import com.example.demo.dto.UserInfo;
+import com.example.demo.dto.Login;
 import com.example.demo.model.Cities;
 import com.example.demo.repositories.CitiesRepo;
 import com.example.demo.services.CitiesService;
 import com.example.demo.services.LoginService;
+import com.example.demo.services.SecurityService;
+import com.example.demo.dto.Token;
 
 import java.util.*;
 
@@ -40,6 +43,8 @@ public class Challenge {
     CitiesService cityServ;
     @Autowired
     LoginService loginServ;
+    @Autowired
+    SecurityService secServ;
 
 
 
@@ -140,6 +145,32 @@ public class Challenge {
     }
     @PatchMapping("/changepassword")
     public ResponseEntity<String>Challenge7(@RequestBody ChangePass data){
-        loginServ.changePassword(loginServ.login(data.username(), data.password()), data.newPassword(), data.repeatPassword());
+
+        var UpUser = loginServ.changePassword(loginServ.login(data.username(), data.password()), data.newPassword(), data.repeatPassword());
+
+        return UpUser!=null?new ResponseEntity<>("Usuario editado!!",HttpStatus.OK):new ResponseEntity<>("Erro ao editar usuario!!",HttpStatus.OK);
     }
+    @PostMapping("/user")
+    public ResponseEntity<String>Challenge8(@RequestBody UserInfo data){
+        if(!loginServ.checkEmail(data.email()))
+        return new ResponseEntity<>("Email Invalido!!!",HttpStatus.OK);
+        if(!loginServ.checkPassword(data.password()))
+            return new ResponseEntity<>("Senha Invalida!!!",HttpStatus.OK);
+        if(!loginServ.checkUser(data.username()))
+            return new ResponseEntity<>("Username Invalido!!!",HttpStatus.OK);
+
+        if(!loginServ.createAccount(data.username(), data.email(), data.password()))
+            return new ResponseEntity<>("Erro na Criação de conta!!!",HttpStatus.OK);
+
+        return new ResponseEntity<>("Conta Criada com secesso!!!",HttpStatus.OK);
+    }
+    @PostMapping("/login")
+    public ResponseEntity<Token>Challenge9(@RequestBody Login data){
+        var currUser = loginServ.login(data.login(),data.password());
+        if(currUser == null)
+            return new ResponseEntity<>(new Token("Login Invalido","Invalido!!"),HttpStatus.OK);
+
+        return new ResponseEntity<>(new Token("Logado com sucesso!!", secServ.generateToken(currUser)),HttpStatus.OK);
+    }
+
 }

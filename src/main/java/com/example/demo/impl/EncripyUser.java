@@ -5,23 +5,35 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.example.demo.model.User;
 import com.example.demo.repositories.UserRepo;
 import com.example.demo.services.LoginService;
+import com.example.demo.services.SecurityService;
 
-public class UserImpl implements LoginService{
+public class EncripyUser implements LoginService{
     
     @Autowired
-    UserRepo userRepo;
+    SecurityService secS;
     
+    @Autowired
+    UserRepo repo;
+
     @Override
     public User login(String user, String password) {
-        var currUser = userRepo.findByUsername(user);
-        if(user == null ||!currUser.get(0).getPassword().equals(password))
+        var currUser = repo.findByUsername(user);
+
+        if(currUser.isEmpty())
+            currUser = repo.findByEmail(user);
+
+        if(currUser.isEmpty())
             return null;
+        
+        if(!secS.checkEncode(password, currUser.get(0).getPassword()))
+            return null;
+
         return currUser.get(0);
     }
-    
+
     @Override
     public boolean checkUser(String user) {
-        if(!userRepo.findByUsername(user).isEmpty())
+        if(!repo.findByUsername(user).isEmpty())
             return false;
         
         return true;
@@ -32,7 +44,7 @@ public class UserImpl implements LoginService{
         if(email.length()<4)
             return false;
             
-        if(!userRepo.findByEmail(email).isEmpty())
+        if(!repo.findByEmail(email).isEmpty())
             return false;
         
         try {
@@ -64,18 +76,17 @@ public class UserImpl implements LoginService{
         return number && letter && letterUp;
     }
 
+
     @Override
     public boolean createAccount(String user, String email, String password) {
         if(!checkEmail(email) || !checkPassword(password) || !checkUser(user))
             return false;
-        
+
         var newUser = new User();
         newUser.setEmail(email);
-        newUser.setPassword(password);
         newUser.setUsername(user);
-
-        userRepo.saveAndFlush(newUser);
-
+        newUser.setPassword(secS.encode(password));
+        repo.save(newUser);
         return true;
     }
 
@@ -88,9 +99,9 @@ public class UserImpl implements LoginService{
         if(!checkPassword(newPassword))
             return null;
 
-        currUser.setPassword(newPassword);
+        currUser.setPassword(secS.encode(newPassword));
 
-        return userRepo.save(currUser);
+        return repo.save(currUser);
     }
     
 }

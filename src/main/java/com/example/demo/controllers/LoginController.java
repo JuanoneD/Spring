@@ -12,7 +12,7 @@ import com.example.demo.services.LoginService;
 
 
 @RestController
-@RequestMapping("/login")
+@RequestMapping("/loginAA")
 public class LoginController {
     @Autowired
     LoginService service;
