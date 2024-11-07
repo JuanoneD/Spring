@@ -44,7 +44,7 @@ public class DefaultJWTImpl implements JwtService<TokenBody>{
         }
         catch (Exception ex)
         {
-            ex.printStackTrace();
+            // ex.printStackTrace();
             return null;
         }
     }
