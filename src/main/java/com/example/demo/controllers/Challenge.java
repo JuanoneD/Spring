@@ -17,15 +17,20 @@ import com.example.demo.dto.CitiesDto;
 import com.example.demo.dto.Collazt;
 import com.example.demo.dto.Cu;
 import com.example.demo.dto.Exp;
+import com.example.demo.dto.JwtVali;
 import com.example.demo.dto.Reverser;
 import com.example.demo.dto.UserInfo;
 import com.example.demo.dto.Login;
-import com.example.demo.model.Cities;
 import com.example.demo.repositories.CitiesRepo;
 import com.example.demo.services.CitiesService;
+import com.example.demo.services.JwtService;
 import com.example.demo.services.LoginService;
+import com.example.demo.services.ProductService;
 import com.example.demo.services.SecurityService;
 import com.example.demo.dto.Token;
+import com.example.demo.dto.TokenBody;
+import org.springframework.web.bind.annotation.RequestAttribute;
+
 
 import java.util.*;
 
@@ -38,13 +43,16 @@ public class Challenge {
 
     @Autowired
     CitiesRepo cityRepo;
-
     @Autowired
     CitiesService cityServ;
     @Autowired
     LoginService loginServ;
     @Autowired
     SecurityService secServ;
+    @Autowired
+    ProductService prodServ;
+    @Autowired
+    JwtService<TokenBody> jwt;
 
 
 
@@ -169,8 +177,26 @@ public class Challenge {
         var currUser = loginServ.login(data.login(),data.password());
         if(currUser == null)
             return new ResponseEntity<>(new Token("Login Invalido","Invalido!!"),HttpStatus.OK);
+        
+        var token = new TokenBody();
+        token.setId(currUser.getId());
+        token.setEmail(currUser.getEmail());
+        token.setName(currUser.getUsername());
 
-        return new ResponseEntity<>(new Token("Logado com sucesso!!", secServ.generateToken(currUser)),HttpStatus.OK);
+        return new ResponseEntity<>(new Token("Logado com sucesso!!", jwt.get(token)),HttpStatus.OK);
+    }
+    @PostMapping("/product")
+    public ResponseEntity<String> Challenge10(@RequestAttribute("token") TokenBody token,@RequestBody JwtVali data){
+        String curremail=token.getEmail();
+
+        if(!curremail.split("@")[1].equals("loja.com"))
+            return ResponseEntity.status(403).build();
+
+        prodServ.createProduct(data.title(),Float.parseFloat(data.value()));
+
+        return new ResponseEntity<>(HttpStatus.OK);
+        
+        
     }
 
 }
